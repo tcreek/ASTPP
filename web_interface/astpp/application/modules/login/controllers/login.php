@@ -712,6 +712,39 @@ class Login extends MX_Controller
         }
     }
 
+
+function customer_permission_list_multi()
+{
+    $postData = $this->input->post()['post_data'];
+    if (!isset($postData)) {
+        echo '0';
+        return;
+    }
+    foreach ($postData as $k => $button_array) {
+        //$button_array = $this->input->post();
+        //var_dump($button_array['button_name']);
+        $permissioninfo = $this->session->userdata('permissioninfo');
+        $currnet_url = $button_array['current_url'];
+        $url_explode = explode('/', $currnet_url);
+        $module_name = $url_explode[3];
+        $sub_module_name = $url_explode[4];
+        //var_dump($button_array['button_name']);
+        //var_dump($permissioninfo[$module_name][$sub_module_name][$button_array['button_name']]);
+        if ((isset($permissioninfo[$module_name][$sub_module_name][$button_array['button_name']]) 
+        && $permissioninfo[$module_name][$sub_module_name][$button_array['button_name']] == 0) or $permissioninfo['login_type'] == '-1' or $permissioninfo['login_type'] == '0' or $permissioninfo['login_type'] == '3') {
+            //echo 0;
+            $perm[$k] = 0;
+        } else {
+            //echo 1;
+            $perm[$k] = 1;
+        }
+    }
+    echo json_encode($perm);
+}
+
+
+
+
     function customer_permission_list()
     {
         $button_array = $this->input->post();

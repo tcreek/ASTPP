@@ -204,7 +204,7 @@ function build_grid(grid_id, destination, collumn_arr, buttons) {
         method: 'GET',
         dataType: 'json',
         colModel: build_collumns(collumn_arr),
-        buttons: build_buttons(buttons),
+        buttons: build_buttons_multi(buttons),
         usepager: true,
         resizable: true,
         title: '',
@@ -355,6 +355,94 @@ function build_buttons(buttons_arr) {
     }
     return jsonObj;
 }
+
+function build_buttons_multi(buttons_arr) {
+    var jsonObj = []; //declare object
+    if (buttons_arr == "") {
+        return jsonObj;
+    }
+    var btn_field = [];
+    var button_property = new Array();
+
+    var btn_arr = buttons_arr;
+    for (var key in btn_arr) {
+        if (btn_arr[key] != null)
+            btn_field.push(btn_arr[key]);
+    }
+
+    var obj = {};
+    var post_data = [];
+    for (var i = 0; i < btn_field.length; i++) {
+        if (btn_field[i] != "") {
+            var btn_str = btn_field[i];
+            button_property = btn_str.toString().split(',');
+            //ASTPP 3.0  
+            custom_url = base_url + button_property[4];
+            result = custom_url.replace(/.*?:\/\//g, "");
+            result = result.replace("//", "/");
+            var newURL = window.location.protocol + "//" + result;
+            var layout = 'small';
+
+            if (typeof button_property[6] != 'undefined' && button_property[6] != '') {
+                layout = button_property[6];
+            }
+
+            obj = {
+                'button_name': button_property[7],
+                'current_url': window.location.href,
+                'button_property': button_property,
+                'newURL': newURL,
+                'layout': layout
+            };
+            post_data.push(obj)
+            //console.log('post data ', obj);
+        }
+        //console.log('i got nothing ');
+    }
+    if (btn_field.length === 0) {
+        post_data = {};
+    }
+    $.ajax({
+        type: 'POST',
+        async: false,
+        url: base_url + "login/customer_permission_list_multi/",
+        data: {post_data:post_data},
+        success: function (response) {
+            //console.log('result is ', response);
+            result = JSON.parse(response);
+            //console.log('result is ', result);
+            // alert(button_property[0]+'---'+response_trim);
+            $.each(result, function(idx, val) {
+                //console.log('idx is ',post_data[idx].button_property);
+                if (val == 0) {
+                    if (post_data[idx].button_property[5] == 'popup') {
+                        jsonObj.push({
+                            //name: gettext_custom(button_property[0]), 
+                            name: post_data[idx].button_property[0],
+                            bclass: post_data[idx].button_property[1],
+                            iclass: post_data[idx].button_property[2],
+                            btn_url: post_data[idx].newURL,
+                            clayout: post_data[idx].layout,
+                            onpress: button_action_popup
+                        });
+                    } else {
+                        jsonObj.push({
+                            //name: gettext_custom(button_property[0]), 
+                            name: post_data[idx].button_property[0],
+                            bclass: post_data[idx].button_property[1],
+                            iclass: post_data[idx].button_property[2],
+                            btn_url: post_data[idx].button_property[4],
+                            clayout: post_data[idx].layout,
+                            onpress: button_action
+                        });
+                    }
+                }
+            });
+        }
+    });
+    return jsonObj;
+}
+
 
 function redirect_page(url) {
     if (url == "NULL") {
